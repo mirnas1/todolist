@@ -35,7 +35,7 @@ switch ($action) {
 
 // Function to retrieve tasks
 function getTasks($mysqli, $user_id) {
-    $stmt = $mysqli->prepare("SELECT id, task_text, is_completed, priority FROM tasks WHERE user_id = ?");
+    $stmt = $mysqli->prepare("SELECT id, task_text, is_completed, priority FROM todos WHERE user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -44,7 +44,7 @@ function getTasks($mysqli, $user_id) {
         $tasks[] = $row;
     }
     $stmt->close();
-    echo json_encode(['status' => 'success', 'tasks' => $tasks]);
+    echo json_encode(['status' => 'success', 'todos' => $tasks]);
 }
 
 // Function to add a new task
@@ -57,7 +57,7 @@ function addTask($mysqli, $user_id) {
         return;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO tasks (user_id, task_text, priority) VALUES (?, ?, ?)");
+    $stmt = $mysqli->prepare("INSERT INTO todos (user_id, task_text, priority) VALUES (?, ?, ?)");
     $stmt->bind_param("iss", $user_id, $task_text, $priority);
     if ($stmt->execute()) {
         $task_id = $stmt->insert_id;
@@ -85,7 +85,7 @@ function updateTask($mysqli, $user_id) {
         return;
     }
 
-    $stmt = $mysqli->prepare("UPDATE tasks SET task_text = ?, is_completed = ?, priority = ? WHERE id = ? AND user_id = ?");
+    $stmt = $mysqli->prepare("UPDATE todos SET task_text = ?, is_completed = ?, priority = ? WHERE id = ? AND user_id = ?");
     $stmt->bind_param("sissi", $task_text, $is_completed, $priority, $task_id, $user_id);
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success']);
@@ -104,7 +104,7 @@ function deleteTask($mysqli, $user_id) {
         return;
     }
 
-    $stmt = $mysqli->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
+    $stmt = $mysqli->prepare("DELETE FROM todos WHERE id = ? AND user_id = ?");
     $stmt->bind_param("ii", $task_id, $user_id);
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success']);
