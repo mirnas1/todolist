@@ -35,7 +35,7 @@ switch ($action) {
 
 // Function to retrieve tasks
 function getTasks($mysqli, $user_id) {
-    $stmt = $mysqli->prepare("SELECT id, task_text, is_completed, priority FROM tasks WHERE user_id = ? ORDER BY created_at DESC");
+    $stmt = $mysqli->prepare("SELECT id, task_text, is_completed, priority FROM tasks WHERE user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
