@@ -1,27 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+  console.log("ayo we loaded");
   const taskInput = document.getElementById('task-input');
   const todoList = document.getElementById('todo-list');
   const completedCountElem = document.getElementById('completed-count');
   const clearCompletedBtn = document.getElementById('clear-completed');
   let completedCount = 0;
 
-  const username = "Wingus"; //placeholder name for now
-  document.getElementById("intro-hi").innerHTML = username + "'s To-Do List";
 
   taskInput.addEventListener('keydown', (e) => {
+    console.log("Key Pressed:", e.key);
     if (e.key === 'Enter' && taskInput.value.trim() !== '') {
       addTask(taskInput.value.trim());
       taskInput.value = '';
     }
   });
-  function toggleForm(showFormId, hideFormId) {
-    document.getElementById(showFormId).style.display = 'block';
-    document.getElementById(hideFormId).style.display = 'none';
-}
-
 
 
   function addTask(taskText) {
+    console.log("adding task:", taskText);
     const listItem = document.createElement('li');
     const moveIcon = document.createElement('span');
     const taskSpan = document.createElement('span');
