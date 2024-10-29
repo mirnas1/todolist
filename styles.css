@@ -1,3 +1,4 @@
+
 @font-face {
     font-family: Satoshi;
     src: url('fonts/Satoshi-Variable.ttf');
@@ -6,7 +7,7 @@
 }
 
 body {
-    font-family: SF Pro, Arial, sans-serif; /* Added fallback fonts */
+    font-family: SF Pro;
     background: url('imgs/cool-mac-wal.jpg') no-repeat center center fixed; 
     margin: 0;
     padding: 20px;
@@ -14,27 +15,20 @@ body {
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
+    margin: 0;
 }
 
 .form-section {
     display: none;
-    /* Center the form contents */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
-
 .form-section.active {
-    display: flex;
+    display: block;
 }
-
-.error, .success {
-    text-align: center; /* Center the text inside error and success messages */
-    margin-bottom: 15px; /* Add some spacing below messages */
+.error {
+    color: red;
 }
-
-.error p, .success p {
-    margin: 5px 0;
+.success {
+    color: green;
 }
 
 /* Container with Skeuomorphic style */
@@ -49,7 +43,6 @@ body {
         inset 3px 3px 5px rgba(0, 0, 0, 0.15),
         5px 5px 15px rgba(0, 0, 0, 0.2); /* Inner and outer shadows for depth */
     border: 1px solid #b3b3b3;
-    position: relative; /* To position the logout button */
 }
 
 /* Heading style */
@@ -63,17 +56,13 @@ h1 {
 
 /* Input container */
 .input-container {
-    width: 100%; /* Ensure it takes full width of the form */
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center the input field */
-    margin-bottom: 20px; /* Add spacing below the input */
+    position: relative;
 }
 
 /* Task input with Skeuomorphic style */
 .login-input {
-    width: 90%; /* Increased width for better alignment */
-    max-width: 300px; /* Limit the maximum width */
+    width: 80%;
+    height: 80%;
     padding: 12px 15px;
     box-sizing: border-box;
     font-size: 15px;
@@ -86,56 +75,39 @@ h1 {
         inset 2px 2px 4px rgba(0, 0, 0, 0.08);
     outline: none;
     transition: box-shadow 0.2s;
-    margin-bottom: 10px; /* Add spacing between inputs */
 }
 
 .login-input:focus {
+    
+
     box-shadow:
         inset -2px -2px 4px rgba(255, 255, 255, 0.7),
         inset 2px 2px 4px rgba(0, 0, 0, 0.20);
 }
 
-/* Sign In and Register Buttons */
-.form-section button {
-    width: 95%; /* Make buttons almost full width */
-    max-width: 300px; /* Limit the maximum width */
-    padding: 10px 0;
+
+#task-input {
+    width: 100%;
+    padding: 12px 15px;
+    box-sizing: border-box;
     font-size: 16px;
-    color: #fff;
-    background-color: #333;
-    border: none;
+    color: #333;
+    background-color: #f0f0f0;
+    border: 1px solid #b3b3b3;
     border-radius: 8px;
-    cursor: pointer;
     box-shadow:
-        2px 2px 5px rgba(0, 0, 0, 0.2),
-        -2px -2px 5px rgba(255, 255, 255, 0.7);
-    transition: background-color 0.3s, transform 0.1s;
-    margin-top: 10px; /* Add spacing above the button */
+        inset -2px -2px 4px rgba(255, 255, 255, 0.9),
+        inset 2px 2px 4px rgba(0, 0, 0, 0.08);
+    outline: none;
+    transition: box-shadow 0.2s;
 }
 
-.form-section button:hover {
-    background-color: #555;
-}
+#task-input:focus {
+    
 
-.form-section button:active {
-    transform: scale(0.98);
-}
-
-/* Message styles */
-.message {
-    text-align: center; /* Center the message text */
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-.message a {
-    color: #0071b1; /* A distinct color for links */
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.message a:hover {
-    text-decoration: underline;
+    box-shadow:
+        inset -2px -2px 4px rgba(255, 255, 255, 0.7),
+        inset 2px 2px 4px rgba(0, 0, 0, 0.20);
 }
 
 /* Task list */
@@ -161,17 +133,16 @@ h1 {
     transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-/* Align task content properly */
-.todo-item .move-icon, 
-.todo-item .options-button {
-    margin: 0 10px;
+.todo-item:hover {
+    background-color: #e0e0e0;
+    box-shadow:
+        inset -1px -1px 2px rgba(255, 255, 255, 0.9),
+        inset 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.todo-item .move-icon {
-    cursor: grab;
-    font-size: 18px;
-    color: #666;
-    text-shadow: 1px 1px 0 #fff;
+.todo-item.dragging {
+    opacity: 0.8;
+    transform: scale(1.02);
 }
 
 .task-text {
@@ -181,7 +152,6 @@ h1 {
     color: black;
     text-shadow: 1px 1px 0 #fff;
     font-weight: 500;
-    text-align: left; /* Ensure text is left-aligned */
 }
 
 .todo-item.completed .task-text {
@@ -190,6 +160,7 @@ h1 {
 }
 
 .options-button {
+    margin-left: 10px;
     background-color: transparent;
     border: none;
     color: black;
@@ -197,6 +168,15 @@ h1 {
     font-size: 27px;
     line-height: 1;
     padding: 0 5px;
+}
+
+
+/* Move icon */
+.move-icon {
+    cursor: grab;
+    font-size: 18px;
+    color: #666;
+    text-shadow: 1px 1px 0 #fff;
 }
 
 /* Priority indicator */
@@ -220,16 +200,12 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 #completed-count {
     color: rgb(0, 113, 21);
     font-weight: bold;
     font-size: medium;
-    text-align: center; /* Center the text */
-    width: 100%; /* Make it full width on smaller screens */
-    margin-bottom: 10px; /* Add spacing below the count */
 }
 
 #clear-completed {
@@ -243,14 +219,48 @@ h1 {
     box-shadow:
         inset -1px -1px 2px rgba(255, 255, 255, 0.7),
         inset 1px 1px 2px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.2s;
 }
 
 #clear-completed:hover {
     background-color: #e0e0e0;
 }
 
-/* Logout Button Styles */
+
+.options-menu {
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.options-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+
+/* Completed task styles */
+.todo-item.completed {
+    cursor: default;
+    background-color: #d9d9d9;
+    box-shadow:
+        inset -1px -1px 2px rgba(255, 255, 255, 0.5),
+        inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.todo-item.completed .move-icon {
+    display: none;
+}
+
 .logout-container {
     position: absolute;
     top: 20px;
@@ -267,53 +277,8 @@ h1 {
     box-shadow:
         inset -1px -1px 2px rgba(255, 255, 255, 0.7),
         inset 1px 1px 2px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.2s, transform 0.1s;
 }
 
 .logout-container a:hover {
     background-color: #e0e0e0;
-    transform: scale(1.05);
-}
-
-/* Options Menu */
-.options-menu {
-    position: absolute;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    min-width: 150px;
-}
-
-.options-menu button {
-    display: block;
-    width: 100%;
-    padding: 10px 15px;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-    color: #333;
-    transition: background-color 0.2s;
-}
-
-.options-menu button:hover {
-    background-color: #f0f0f0;
-}
-
-/* Completed task styles */
-.todo-item.completed {
-    cursor: default;
-    background-color: #d9d9d9;
-    box-shadow:
-        inset -1px -1px 2px rgba(255, 255, 255, 0.5),
-        inset 1px 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.todo-item.completed .move-icon {
-    display: none;
 }
