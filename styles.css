@@ -24,6 +24,30 @@ body {
 .form-section.active {
     display: block;
 }
+/* from here*/
+.form-section button {
+    width: 95%; 
+    max-width: 300px;
+    padding: 10px 0;
+    font-size: 16px;
+    color: #fff;
+    background-color: #333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow:
+        2px 2px 5px rgba(0, 0, 0, 0.2),
+        -2px -2px 5px rgba(255, 255, 255, 0.7);
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+
+.form-section button:hover {
+    background-color: #555;
+}
+
+/* to here is kinda new*/
+
 .error {
     color: red;
 }
@@ -57,6 +81,10 @@ h1 {
 /* Input container */
 .input-container {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    margin-bottom: 20px; 
 }
 
 /* Task input with Skeuomorphic style */
@@ -75,6 +103,7 @@ h1 {
         inset 2px 2px 4px rgba(0, 0, 0, 0.08);
     outline: none;
     transition: box-shadow 0.2s;
+    margin-bottom: 10px; 
 }
 
 .login-input:focus {
