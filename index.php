@@ -6,7 +6,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 require_once 'config.php';
 
-// Fetch username from the database
 $userId = $_SESSION['user_id'];
 $stmt = $mysqli->prepare("SELECT username FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
@@ -25,6 +24,11 @@ $stmt->close();
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+    <div class="logout-container">
+        <a href="logout.php">Logout</a>
+    </div>
+
     <div class="todo-app">
     <h1><?php echo htmlspecialchars($username); ?>'s To-Do List</h1>
         <div class="input-container">

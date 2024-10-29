@@ -4,6 +4,7 @@ require_once 'config.php';
 
 $errors = array();
 $success = '';
+$activeForm = 'loginForm'; // Default active form
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $action = $_POST['action'];
@@ -15,14 +16,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if (empty($username) || empty($password) || empty($email)) {
             $errors[] = "All fields are required.";
+            $activeForm = 'registerForm';
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $mysqli->prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $username, $hashed_password, $email);
             if ($stmt->execute()) {
                 $success = "Registration successful. Please log in.";
+                $activeForm = 'loginForm'; // Switch to login form
             } else {
                 $errors[] = "Username or email already exists.";
+                $activeForm = 'registerForm';
             }
             $stmt->close();
         }
@@ -41,9 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             } else {
                 $errors[] = "Invalid username or password.";
+                $activeForm = 'loginForm';
             }
         } else {
             $errors[] = "Invalid username or password.";
+            $activeForm = 'loginForm';
         }
         $stmt->close();
     }
@@ -59,7 +65,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="todo-app">
-        <h1>Welcome Back!</h1>
+        <!-- Dynamic Heading -->
+        <?php if ($activeForm == 'loginForm') : ?>
+            <h1>Welcome Back!</h1>
+        <?php else : ?>
+            <h1>Welcome!</h1>
+        <?php endif; ?>
+
+        <!-- Display Errors or Success Messages -->
         <?php if ($errors) : ?>
             <div class="error">
                 <?php foreach ($errors as $error) : ?>
@@ -69,9 +82,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php elseif ($success) : ?>
             <div class="success"><p><?php echo $success; ?></p></div>
         <?php endif; ?>
+
         <div class="input-container">
             <!-- Registration Form -->
-            <form id="registerForm" class="form-section active" method="post" action="auth.php">
+            <form id="registerForm" class="form-section <?php echo ($activeForm == 'registerForm') ? 'active' : ''; ?>" method="post" action="auth.php">
                 <input class="login-input" type="text" name="username" placeholder="Username" required/>
                 <input class="login-input" type="password" name="password" placeholder="Password" required/>
                 <input class="login-input" type="email" name="email" placeholder="Email Address" required/>
@@ -79,8 +93,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="submit">Register</button>
                 <p class="message">Already registered? <a href="#" onclick="toggleForm('loginForm', 'registerForm')">Sign In</a></p>
             </form>
+
             <!-- Login Form -->
-            <form id="loginForm" class="form-section" method="post" action="auth.php">
+            <form id="loginForm" class="form-section <?php echo ($activeForm == 'loginForm') ? 'active' : ''; ?>" method="post" action="auth.php">
                 <input class="login-input" type="text" name="username" placeholder="Username" required/>
                 <input class="login-input" type="password" name="password" placeholder="Password" required/>
                 <input type="hidden" name="action" value="login"/>
@@ -89,10 +104,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
         </div>
     </div>
+
+    <!-- JavaScript to Toggle Forms and Headings -->
     <script>
     function toggleForm(showFormId, hideFormId) {
         document.getElementById(showFormId).classList.add('active');
         document.getElementById(hideFormId).classList.remove('active');
+
+        // Change heading based on active form
+        var heading = document.querySelector('.todo-app h1');
+        if (showFormId === 'loginForm') {
+            heading.textContent = 'Welcome Back!';
+        } else {
+            heading.textContent = 'Welcome!';
+        }
     }
     </script>
 </body>
