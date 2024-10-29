@@ -18,12 +18,19 @@ body {
     margin: 0;
 }
 
-#register {
+.form-section {
     display: none;
 }
-#register {
-    display: none;
+.form-section.active {
+    display: block;
 }
+.error {
+    color: red;
+}
+.success {
+    color: green;
+}
+
 /* Container with Skeuomorphic style */
 .todo-app {
     width: 400px;

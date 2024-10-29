@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
       taskInput.value = '';
     }
   });
+  function toggleForm(showFormId, hideFormId) {
+    document.getElementById(showFormId).style.display = 'block';
+    document.getElementById(hideFormId).style.display = 'none';
+}
+
 
 
   function addTask(taskText) {
