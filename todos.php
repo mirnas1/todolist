@@ -4,20 +4,17 @@ header('Content-Type: application/json');
 
 require_once 'config.php';
 
-// Enable error reporting for debugging (remove in production)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Check if user is logged in
+
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Not authenticated']);
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
-
-// Determine the action
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 switch ($action) {
@@ -38,7 +35,6 @@ switch ($action) {
         break;
 }
 
-// Function to retrieve todos
 function getTodos($mysqli, $user_id) {
     $stmt = $mysqli->prepare("SELECT id, todo, is_completed, priority, `order` FROM todos WHERE user_id = ? ORDER BY `order` ASC");
     $stmt->bind_param("i", $user_id);
@@ -46,7 +42,6 @@ function getTodos($mysqli, $user_id) {
     $result = $stmt->get_result();
     $todos = [];
     while ($row = $result->fetch_assoc()) {
-        // Convert 'is_completed' to boolean
         $row['is_completed'] = (bool)$row['is_completed'];
         $todos[] = $row;
     }
@@ -54,8 +49,6 @@ function getTodos($mysqli, $user_id) {
     echo json_encode(['status' => 'success', 'todos' => $todos]);
 }
 
-
-// Function to add a new todo
 function addTodo($mysqli, $user_id) {
     $todo_text = isset($_POST['todo']) ? trim($_POST['todo']) : '';
     $priority = isset($_POST['priority']) ? $_POST['priority'] : 'white';
@@ -65,8 +58,6 @@ function addTodo($mysqli, $user_id) {
         echo json_encode(['status' => 'error', 'message' => 'Todo text cannot be empty']);
         return;
     }
-
-    // Determine the next order value
     $stmt_order = $mysqli->prepare("SELECT MAX(`order`) AS max_order FROM todos WHERE user_id = ?");
     $stmt_order->bind_param("i", $user_id);
     $stmt_order->execute();
@@ -92,8 +83,6 @@ function addTodo($mysqli, $user_id) {
     $stmt->close();
 }
 
-
-// Function to update an existing todo
 function updateTodo($mysqli, $user_id) {
     $todo_id = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
     $todo_text = isset($_POST['todo']) ? trim($_POST['todo']) : '';
@@ -116,7 +105,6 @@ function updateTodo($mysqli, $user_id) {
     $stmt->close();
 }
 
-// Function to delete a todo
 function deleteTodo($mysqli, $user_id) {
     $todo_id = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
 

@@ -4,7 +4,7 @@ require_once 'config.php';
 
 $errors = array();
 $success = '';
-$activeForm = 'loginForm'; // Default active form
+$activeForm = 'loginForm'; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $action = $_POST['action'];
@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("sss", $username, $hashed_password, $email);
             if ($stmt->execute()) {
                 $success = "Registration successful. Please log in.";
-                $activeForm = 'loginForm'; // Switch to login form after registration
+                $activeForm = 'loginForm';
             } else {
                 $errors[] = "Username or email already exists.";
                 $activeForm = 'registerForm';
@@ -65,7 +65,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="todo-app">
-        <!-- Dynamic Heading -->
         <?php if ($activeForm == 'loginForm') : ?>
             <h1>Welcome Back!</h1>
         <?php else : ?>
