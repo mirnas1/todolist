@@ -1,119 +1,121 @@
+// index.js
+
 document.addEventListener('DOMContentLoaded', () => {
-  const taskInput = document.getElementById('task-input');
+  const todoInput = document.getElementById('task-input'); // Updated variable name
   const todoList = document.getElementById('todo-list');
   const completedCountElem = document.getElementById('completed-count');
   const clearCompletedBtn = document.getElementById('clear-completed');
   let completedCount = 0;
 
-  // Load tasks from server when the page loads
-  loadTasks();
+  // Load todos from server when the page loads
+  loadTodos();
 
-  // Event listener for adding a new task
-  taskInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && taskInput.value.trim() !== '') {
-      addTaskToServer(taskInput.value.trim(), 'white'); // Default priority is 'white'
-      taskInput.value = '';
+  // Event listener for adding a new todo
+  todoInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && todoInput.value.trim() !== '') {
+      addTodoToServer(todoInput.value.trim(), 'white'); // Default priority is 'white'
+      todoInput.value = '';
     }
   });
 
-  // Function to load tasks from the server
-  function loadTasks() {
-    fetch('tasks.php?action=get', {
+  // Function to load todos from the server
+  function loadTodos() {
+    fetch('todos.php?action=get', {
       method: 'GET',
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === 'success') {
-          data.tasks.forEach((task) => {
-            addTaskToUI(task);
-            if (task.is_completed) {
+          data.todos.forEach((todo) => {
+            addTodoToUI(todo);
+            if (todo.is_completed) {
               completedCount++;
             }
           });
           updateCompletedCount();
         } else {
-          console.error('Error fetching tasks:', data.message);
+          console.error('Error fetching todos:', data.message);
         }
       })
-      .catch((error) => console.error('Error fetching tasks:', error));
+      .catch((error) => console.error('Error fetching todos:', error));
   }
 
-  // Function to add a task to the server
-  function addTaskToServer(taskText, priority) {
-    fetch('tasks.php', {
+  // Function to add a todo to the server
+  function addTodoToServer(todoText, priority) {
+    fetch('todos.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=add&task_text=${encodeURIComponent(taskText)}&priority=${encodeURIComponent(priority)}`,
+      body: `action=add&todo=${encodeURIComponent(todoText)}&priority=${encodeURIComponent(priority)}`,
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === 'success') {
-          addTaskToUI(data.task);
+          addTodoToUI(data.todo);
         } else {
-          alert('Error adding task: ' + data.message);
+          alert('Error adding todo: ' + data.message);
         }
       })
-      .catch((error) => console.error('Error adding task:', error));
+      .catch((error) => console.error('Error adding todo:', error));
   }
 
-  // Function to add a task to the UI
-  function addTaskToUI(task) {
+  // Function to add a todo to the UI
+  function addTodoToUI(todo) {
     const listItem = document.createElement('li');
     const moveIcon = document.createElement('span');
-    const taskSpan = document.createElement('span');
+    const todoSpan = document.createElement('span');
     const priorityIndicator = document.createElement('span');
     const optionsBtn = document.createElement('button');
 
     listItem.className = 'todo-item';
-    listItem.setAttribute('data-id', task.id);
+    listItem.setAttribute('data-id', todo.id);
     moveIcon.className = 'move-icon';
-    taskSpan.className = 'task-text';
+    todoSpan.className = 'todo-text';
     optionsBtn.className = 'options-button';
     priorityIndicator.className = 'priority-indicator';
 
     moveIcon.innerHTML = '&#9776;';
-    taskSpan.textContent = task.task_text;
+    todoSpan.textContent = todo.todo;
     optionsBtn.textContent = '\u22EE';
 
-    priorityIndicator.style.backgroundColor = task.priority;
+    priorityIndicator.style.backgroundColor = todo.priority;
 
     listItem.appendChild(moveIcon);
-    listItem.appendChild(taskSpan);
+    listItem.appendChild(todoSpan);
     listItem.appendChild(priorityIndicator);
     listItem.appendChild(optionsBtn);
 
-    listItem.setAttribute('draggable', !task.is_completed);
+    listItem.setAttribute('draggable', !todo.is_completed);
 
-    if (task.is_completed) {
+    if (todo.is_completed) {
       listItem.classList.add('completed');
       moveIcon.style.display = 'none';
     }
 
     // Event listeners
-    taskSpan.addEventListener('click', () => toggleComplete(listItem));
+    todoSpan.addEventListener('click', () => toggleComplete(listItem));
     optionsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      showOptionsMenu(listItem, taskSpan, priorityIndicator, e.pageX, e.pageY);
+      showOptionsMenu(listItem, todoSpan, priorityIndicator, e.pageX, e.pageY);
     });
 
     // Drag and drop functionality
-    if (!task.is_completed) {
+    if (!todo.is_completed) {
       addDragAndDrop(listItem);
     }
 
     // Append to the correct position
-    insertTaskAtCorrectPosition(listItem);
+    insertTodoAtCorrectPosition(listItem);
 
     // Update completed count
-    if (task.is_completed) {
+    if (todo.is_completed) {
       completedCount++;
       updateCompletedCount();
     }
   }
 
-  // Function to toggle task completion
+  // Function to toggle todo completion
   function toggleComplete(listItem) {
-    const taskId = listItem.getAttribute('data-id');
+    const todoId = listItem.getAttribute('data-id');
     const isCompleted = listItem.classList.toggle('completed');
     const moveIcon = listItem.querySelector('.move-icon');
 
@@ -121,55 +123,57 @@ document.addEventListener('DOMContentLoaded', () => {
       listItem.removeAttribute('draggable');
       moveIcon.style.display = 'none';
       completedCount++;
-      insertCompletedTaskAtCorrectPosition(listItem);
+      insertCompletedTodoAtCorrectPosition(listItem);
     } else {
       listItem.setAttribute('draggable', true);
       moveIcon.style.display = 'inline';
       completedCount--;
-      insertTaskAtCorrectPosition(listItem);
+      insertTodoAtCorrectPosition(listItem);
     }
     updateCompletedCount();
 
-    // Update task status on the server
-    const taskText = listItem.querySelector('.task-text').textContent;
+    // Update todo status on the server
+    const todoText = listItem.querySelector('.todo-text').textContent;
     const priority = listItem.querySelector('.priority-indicator').style.backgroundColor;
-    updateTaskOnServer(taskId, taskText, isCompleted, priority);
+    updateTodoOnServer(todoId, todoText, isCompleted, priority);
   }
 
-  // Function to update task on the server
-  function updateTaskOnServer(taskId, taskText, isCompleted, priority) {
-    fetch('tasks.php', {
-      method: 'POST', // Changed to POST
+  // Function to update todo on the server
+  function updateTodoOnServer(todoId, todoText, isCompleted, priority) {
+    fetch('todos.php', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=update&task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`,
+      body: `action=update&task_id=${encodeURIComponent(todoId)}&todo=${encodeURIComponent(todoText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`,
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.status !== 'success') {
-          alert('Error updating task: ' + data.message);
+          alert('Error updating todo: ' + data.message);
         }
       })
-      .catch((error) => console.error('Error updating task:', error));
+      .catch((error) => console.error('Error updating todo:', error));
   }
-  function deleteTaskFromServer(taskId) {
-    fetch('tasks.php', {
+
+  // Function to delete a todo from the server
+  function deleteTodoFromServer(todoId) {
+    fetch('todos.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=delete&task_id=${encodeURIComponent(taskId)}`,
+      body: `action=delete&task_id=${encodeURIComponent(todoId)}`,
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === 'success') {
-          // Task successfully deleted from server
+          // Todo successfully deleted from server
         } else {
-          alert('Error deleting task: ' + data.message);
+          alert('Error deleting todo: ' + data.message);
         }
       })
-      .catch((error) => console.error('Error deleting task:', error));
+      .catch((error) => console.error('Error deleting todo:', error));
   }
 
-  // Function to show the options menu for a task
-  function showOptionsMenu(listItem, taskSpan, priorityIndicator, x, y) {
+  // Function to show the options menu for a todo
+  function showOptionsMenu(listItem, todoSpan, priorityIndicator, x, y) {
     // Remove existing menu if any
     const existingMenu = document.querySelector('.options-menu');
     if (existingMenu) existingMenu.remove();
@@ -189,43 +193,43 @@ document.addEventListener('DOMContentLoaded', () => {
       priorityBtn.textContent = option.label;
       priorityBtn.addEventListener('click', () => {
         priorityIndicator.style.backgroundColor = option.color;
-        const taskId = listItem.getAttribute('data-id');
-        const taskText = taskSpan.textContent;
+        const todoId = listItem.getAttribute('data-id');
+        const todoText = todoSpan.textContent;
         const isCompleted = listItem.classList.contains('completed');
-        updateTaskOnServer(taskId, taskText, isCompleted, option.color);
+        updateTodoOnServer(todoId, todoText, isCompleted, option.color);
         menu.remove();
       });
       menu.appendChild(priorityBtn);
     });
 
-    // Edit task
+    // Edit todo
     const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit Task';
+    editBtn.textContent = 'Edit Todo';
     editBtn.addEventListener('click', () => {
-      const newText = prompt('Edit task:', taskSpan.textContent);
+      const newText = prompt('Edit todo:', todoSpan.textContent);
       if (newText !== null && newText.trim() !== '') {
-        taskSpan.textContent = newText.trim();
-        const taskId = listItem.getAttribute('data-id');
+        todoSpan.textContent = newText.trim();
+        const todoId = listItem.getAttribute('data-id');
         const isCompleted = listItem.classList.contains('completed');
         const priority = priorityIndicator.style.backgroundColor;
-        updateTaskOnServer(taskId, newText.trim(), isCompleted, priority);
+        updateTodoOnServer(todoId, newText.trim(), isCompleted, priority);
       }
       menu.remove();
     });
     menu.appendChild(editBtn);
 
-    // Delete task
+    // Delete todo
     const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete Task';
+    deleteBtn.textContent = 'Delete Todo';
     deleteBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to delete this task?')) {
-        const taskId = listItem.getAttribute('data-id');
+      if (confirm('Are you sure you want to delete this todo?')) {
+        const todoId = listItem.getAttribute('data-id');
         if (listItem.classList.contains('completed')) {
           completedCount--;
           updateCompletedCount();
         }
         listItem.remove();
-        deleteTaskFromServer(taskId);
+        deleteTodoFromServer(todoId);
       }
       menu.remove();
     });
@@ -293,36 +297,36 @@ document.addEventListener('DOMContentLoaded', () => {
     ).element;
   }
 
-  // Function to clear all completed tasks
+  // Function to clear all completed todos
   clearCompletedBtn.addEventListener('click', () => {
-    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
-    completedTasks.forEach((task) => {
-      const taskId = task.getAttribute('data-id');
-      task.remove();
-      deleteTaskFromServer(taskId);
+    const completedTodos = todoList.querySelectorAll('.todo-item.completed');
+    completedTodos.forEach((todo) => {
+      const todoId = todo.getAttribute('data-id');
+      todo.remove();
+      deleteTodoFromServer(todoId);
     });
     completedCount = 0;
     updateCompletedCount();
   });
 
-  // Function to insert task at the correct position
-  function insertTaskAtCorrectPosition(listItem) {
-    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
-    if (completedTasks.length > 0) {
-      // Insert before the first completed task
-      todoList.insertBefore(listItem, completedTasks[0]);
+  // Function to insert todo at the correct position
+  function insertTodoAtCorrectPosition(listItem) {
+    const completedTodos = todoList.querySelectorAll('.todo-item.completed');
+    if (completedTodos.length > 0) {
+      // Insert before the first completed todo
+      todoList.insertBefore(listItem, completedTodos[0]);
     } else {
-      // No completed tasks, append at the end
+      // No completed todos, append at the end
       todoList.appendChild(listItem);
     }
   }
 
-  // Function to insert completed task at the bottom
-  function insertCompletedTaskAtCorrectPosition(listItem) {
+  // Function to insert completed todo at the bottom
+  function insertCompletedTodoAtCorrectPosition(listItem) {
     todoList.appendChild(listItem);
   }
 
-  // Function to update the completed tasks count
+  // Function to update the completed todos count
   function updateCompletedCount() {
     completedCountElem.textContent = completedCount;
   }
