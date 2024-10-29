@@ -20,9 +20,12 @@ body {
 
 .form-section {
     display: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .form-section.active {
-    display: block;
+    display: flex;
 }
 /* from here*/
 .form-section button {
