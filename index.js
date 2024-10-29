@@ -1,5 +1,3 @@
-// index.js
-
 document.addEventListener('DOMContentLoaded', () => {
   const taskInput = document.getElementById('task-input');
   const todoList = document.getElementById('todo-list');
@@ -22,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadTasks() {
     fetch('tasks.php?action=get', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
       .then((response) => response.json())
       .then((data) => {
@@ -142,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to update task on the server
   function updateTaskOnServer(taskId, taskText, isCompleted, priority) {
     fetch('tasks.php', {
-      method: 'POST',
+      method: 'POST', // Changed to POST
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `action=update&task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`,
     })
@@ -154,8 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch((error) => console.error('Error updating task:', error));
   }
-
-  // Function to delete a task from the server
   function deleteTaskFromServer(taskId) {
     fetch('tasks.php', {
       method: 'POST',
