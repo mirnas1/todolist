@@ -18,7 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to load tasks from the server
   function loadTasks() {
-    fetch('tasks.php?action=get')
+    fetch('tasks.php', {
+        method: 'GET'
+    })
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to add a task to the server
   function addTaskToServer(taskText, priority) {
-    fetch('tasks.php?action=add', {
+    fetch('tasks.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `task_text=${encodeURIComponent(taskText)}&priority=${encodeURIComponent(priority)}`
@@ -134,10 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTaskOnServer(taskId, taskText, isCompleted, priority);
   }
 
-  // Function to update task on the server
+  // Function to update task on the server using PUT method
   function updateTaskOnServer(taskId, taskText, isCompleted, priority) {
-    fetch('tasks.php?action=update', {
-      method: 'POST',
+    fetch('tasks.php', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`
     })
@@ -150,20 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => console.error('Error updating task:', error));
   }
 
-  // Function to delete a task from the server
+  // Function to delete a task from the server using DELETE method
   function deleteTaskFromServer(taskId) {
-    fetch('tasks.php?action=delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `task_id=${encodeURIComponent(taskId)}`
+    fetch('tasks.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `task_id=${encodeURIComponent(taskId)}`
     })
     .then(response => response.json())
     .then(data => {
-      if (data.status === 'success') {
-        // Task successfully deleted from server
-      } else {
-        alert('Error deleting task: ' + data.message);
-      }
+        if (data.status === 'success') {
+            // Task successfully deleted from server
+        } else {
+            alert('Error deleting task: ' + data.message);
+        }
     })
     .catch(error => console.error('Error deleting task:', error));
   }
