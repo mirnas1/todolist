@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->fetch();
             if (password_verify($password, $hashed_password)) {
                 $_SESSION['user_id'] = $id;
-                header("Location: index.html");
+                header("Location: index.php");
                 exit;
             } else {
                 $errors[] = "Invalid username or password.";
@@ -70,21 +70,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="success"><p><?php echo $success; ?></p></div>
         <?php endif; ?>
         <div class="input-container">
-            <form class="form-section">
-                <input id="register"  class="login-input" type="text" placeholder="username" required/>
-                <input id="register" class="login-input" type="password" placeholder="password" required/>
-                <input id="register" class="login-input" type="text" placeholder="email address" required/>
-                <button id="register">Register</button>
-                <p id="register" class="message">Already registered? <a href="#" onclick="toggleForm('loginForm', 'registerForm')">Sign In</a></p>
-              </form>
-              <form class="form-section">
-                <input id="login" class="login-input" type="text" placeholder="username" required/>
-                <input id="login" class="login-input" type="password" placeholder="password" required/>
-                <button id="login">Login</button>
-                <p id="login" class="message">Not registered? <a href="#" onclick="toggleForm('registerForm', 'loginForm')">Create an account</a></p>
-              </form>
+            <!-- Registration Form -->
+            <form id="registerForm" class="form-section active" method="post" action="auth.php">
+                <input class="login-input" type="text" name="username" placeholder="Username" required/>
+                <input class="login-input" type="password" name="password" placeholder="Password" required/>
+                <input class="login-input" type="email" name="email" placeholder="Email Address" required/>
+                <input type="hidden" name="action" value="register"/>
+                <button type="submit">Register</button>
+                <p class="message">Already registered? <a href="#" onclick="toggleForm('loginForm', 'registerForm')">Sign In</a></p>
+            </form>
+            <!-- Login Form -->
+            <form id="loginForm" class="form-section" method="post" action="auth.php">
+                <input class="login-input" type="text" name="username" placeholder="Username" required/>
+                <input class="login-input" type="password" name="password" placeholder="Password" required/>
+                <input type="hidden" name="action" value="login"/>
+                <button type="submit">Login</button>
+                <p class="message">Not registered? <a href="#" onclick="toggleForm('registerForm', 'loginForm')">Create an account</a></p>
+            </form>
         </div>
     </div>
-    <script src="index.js"></script>
+    <script>
+    function toggleForm(showFormId, hideFormId) {
+        document.getElementById(showFormId).classList.add('active');
+        document.getElementById(hideFormId).classList.remove('active');
+    }
+    </script>
 </body>
 </html>
