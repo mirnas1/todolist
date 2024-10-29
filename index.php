@@ -15,7 +15,6 @@ $stmt->fetch();
 $stmt->close();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,13 +23,13 @@ $stmt->close();
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
+    <!-- Logout Button -->
     <div class="logout-container">
         <a href="logout.php">Logout</a>
     </div>
 
     <div class="todo-app">
-    <h1><?php echo htmlspecialchars($username); ?>'s To-Do List</h1>
+        <h1><?php echo htmlspecialchars($username); ?>'s To-Do List</h1>
         <div class="input-container">
             <input type="text" id="task-input" placeholder="Add a new task..." autocomplete="off">
         </div>

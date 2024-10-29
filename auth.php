@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("sss", $username, $hashed_password, $email);
             if ($stmt->execute()) {
                 $success = "Registration successful. Please log in.";
-                $activeForm = 'loginForm'; // Switch to login form
+                $activeForm = 'loginForm'; // Switch to login form after registration
             } else {
                 $errors[] = "Username or email already exists.";
                 $activeForm = 'registerForm';
@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <h1>Welcome!</h1>
         <?php endif; ?>
 
-        <!-- Display Errors or Success Messages -->
+
         <?php if ($errors) : ?>
             <div class="error">
                 <?php foreach ($errors as $error) : ?>
@@ -84,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <div class="input-container">
-            <!-- Registration Form -->
+
             <form id="registerForm" class="form-section <?php echo ($activeForm == 'registerForm') ? 'active' : ''; ?>" method="post" action="auth.php">
                 <input class="login-input" type="text" name="username" placeholder="Username" required/>
                 <input class="login-input" type="password" name="password" placeholder="Password" required/>
@@ -94,7 +94,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="message">Already registered? <a href="#" onclick="toggleForm('loginForm', 'registerForm')">Sign In</a></p>
             </form>
 
-            <!-- Login Form -->
             <form id="loginForm" class="form-section <?php echo ($activeForm == 'loginForm') ? 'active' : ''; ?>" method="post" action="auth.php">
                 <input class="login-input" type="text" name="username" placeholder="Username" required/>
                 <input class="login-input" type="password" name="password" placeholder="Password" required/>
@@ -105,13 +104,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- JavaScript to Toggle Forms and Headings -->
     <script>
     function toggleForm(showFormId, hideFormId) {
         document.getElementById(showFormId).classList.add('active');
         document.getElementById(hideFormId).classList.remove('active');
 
-        // Change heading based on active form
+
         var heading = document.querySelector('.todo-app h1');
         if (showFormId === 'loginForm') {
             heading.textContent = 'Welcome Back!';
@@ -119,6 +117,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             heading.textContent = 'Welcome!';
         }
     }
+    <?php if ($success && $activeForm == 'loginForm') : ?>
+        window.onload = function() {
+            toggleForm('loginForm', 'registerForm');
+        };
+    <?php endif; ?>
     </script>
 </body>
 </html>

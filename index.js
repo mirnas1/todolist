@@ -1,51 +1,91 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("ayo we loaded");
   const taskInput = document.getElementById('task-input');
   const todoList = document.getElementById('todo-list');
   const completedCountElem = document.getElementById('completed-count');
   const clearCompletedBtn = document.getElementById('clear-completed');
   let completedCount = 0;
 
+  // Load tasks from server when the page loads
+  loadTasks();
 
+  // Event listener for adding a new task
   taskInput.addEventListener('keydown', (e) => {
-    console.log("Key Pressed:", e.key);
     if (e.key === 'Enter' && taskInput.value.trim() !== '') {
-      addTask(taskInput.value.trim());
+      addTaskToServer(taskInput.value.trim(), 'white'); // Default priority is 'white'
       taskInput.value = '';
     }
   });
 
+  // Function to load tasks from the server
+  function loadTasks() {
+    fetch('tasks.php?action=get')
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          data.tasks.forEach(task => {
+            addTaskToUI(task);
+            if (task.is_completed) {
+              completedCount++;
+            }
+          });
+          updateCompletedCount();
+        } else {
+          console.error('Error fetching tasks:', data.message);
+        }
+      })
+      .catch(error => console.error('Error fetching tasks:', error));
+  }
 
-  function addTask(taskText) {
-    console.log("adding task:", taskText);
+  // Function to add a task to the server
+  function addTaskToServer(taskText, priority) {
+    fetch('tasks.php?action=add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `task_text=${encodeURIComponent(taskText)}&priority=${encodeURIComponent(priority)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        addTaskToUI(data.task);
+      } else {
+        alert('Error adding task: ' + data.message);
+      }
+    })
+    .catch(error => console.error('Error adding task:', error));
+  }
+
+  // Function to add a task to the UI
+  function addTaskToUI(task) {
     const listItem = document.createElement('li');
     const moveIcon = document.createElement('span');
     const taskSpan = document.createElement('span');
+    const priorityIndicator = document.createElement('span');
     const optionsBtn = document.createElement('button');
-    const priorityIndicator = document.createElement('span'); // New element
 
     listItem.className = 'todo-item';
+    listItem.setAttribute('data-id', task.id);
     moveIcon.className = 'move-icon';
     taskSpan.className = 'task-text';
     optionsBtn.className = 'options-button';
-    priorityIndicator.className = 'priority-indicator'; // Assign class
+    priorityIndicator.className = 'priority-indicator';
 
     moveIcon.innerHTML = '&#9776;'; 
-    taskSpan.textContent = taskText;
+    taskSpan.textContent = task.task_text;
     optionsBtn.textContent = '\u22EE'; 
 
-    priorityIndicator.style.backgroundColor = 'white';
+    priorityIndicator.style.backgroundColor = task.priority;
 
     listItem.appendChild(moveIcon);
     listItem.appendChild(taskSpan);
-    listItem.appendChild(priorityIndicator); // Add priority indicator
+    listItem.appendChild(priorityIndicator);
     listItem.appendChild(optionsBtn);
 
-    listItem.setAttribute('draggable', true);
+    listItem.setAttribute('draggable', !task.is_completed);
 
-    // Insert the new task at the correct position
-    insertTaskAtCorrectPosition(listItem);
-    
+    if (task.is_completed) {
+      listItem.classList.add('completed');
+      moveIcon.style.display = 'none';
+    }
 
     // Event listeners
     taskSpan.addEventListener('click', () => toggleComplete(listItem));
@@ -55,67 +95,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Drag and drop functionality
-    addDragAndDrop(listItem);
-  }
+    if (!task.is_completed) {
+      addDragAndDrop(listItem);
+    }
 
-  // Insert the new task after the last uncompleted task
-  function insertTaskAtCorrectPosition(listItem) {
-    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
-    if (completedTasks.length > 0) {
-      // Insert before the first completed task
-      todoList.insertBefore(listItem, completedTasks[0]);
-    } else {
-      // No completed tasks, append at the end
-      todoList.appendChild(listItem);
+    // Append to the correct position
+    insertTaskAtCorrectPosition(listItem);
+
+    // Update completed count
+    if (task.is_completed) {
+      completedCount++;
+      updateCompletedCount();
     }
   }
 
-  // Toggle task completion
+  // Function to toggle task completion
   function toggleComplete(listItem) {
-    listItem.classList.toggle('completed');
+    const taskId = listItem.getAttribute('data-id');
+    const isCompleted = listItem.classList.toggle('completed');
     const moveIcon = listItem.querySelector('.move-icon');
 
-    if (listItem.classList.contains('completed')) {
-      // Remove draggable attribute and hide move icon
+    if (isCompleted) {
       listItem.removeAttribute('draggable');
       moveIcon.style.display = 'none';
-
       completedCount++;
-
-      // Move the completed task to after the last uncompleted task
       insertCompletedTaskAtCorrectPosition(listItem);
     } else {
-      // Re-add draggable attribute and show move icon
       listItem.setAttribute('draggable', true);
       moveIcon.style.display = 'inline';
-
       completedCount--;
-
-      // Move the uncompleted task back to the correct position
       insertTaskAtCorrectPosition(listItem);
     }
     updateCompletedCount();
+
+    // Update task status on the server
+    const taskText = listItem.querySelector('.task-text').textContent;
+    const priority = listItem.querySelector('.priority-indicator').style.backgroundColor;
+    updateTaskOnServer(taskId, taskText, isCompleted, priority);
   }
 
-  // Insert the completed task at the correct position (after uncompleted tasks)
-  function insertCompletedTaskAtCorrectPosition(listItem) {
-    todoList.appendChild(listItem);
+  // Function to update task on the server
+  function updateTaskOnServer(taskId, taskText, isCompleted, priority) {
+    fetch('tasks.php?action=update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status !== 'success') {
+        alert('Error updating task: ' + data.message);
+      }
+    })
+    .catch(error => console.error('Error updating task:', error));
   }
 
-  // Update completed tasks count
-  function updateCompletedCount() {
-    completedCountElem.textContent = completedCount;
+  // Function to delete a task from the server
+  function deleteTaskFromServer(taskId) {
+    fetch('tasks.php?action=delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `task_id=${encodeURIComponent(taskId)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // Task successfully deleted from server
+      } else {
+        alert('Error deleting task: ' + data.message);
+      }
+    })
+    .catch(error => console.error('Error deleting task:', error));
   }
 
-  // Clear completed tasks
-  clearCompletedBtn.addEventListener('click', () => {
-    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
-    completedTasks.forEach((task) => task.remove());
-    completedCount = 0;
-    updateCompletedCount();
-  });
-
-  // Show options menu
+  // Function to show the options menu for a task
   function showOptionsMenu(listItem, taskSpan, priorityIndicator, x, y) {
     // Remove existing menu if any
     const existingMenu = document.querySelector('.options-menu');
@@ -136,6 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
       priorityBtn.textContent = option.label;
       priorityBtn.addEventListener('click', () => {
         priorityIndicator.style.backgroundColor = option.color;
+        const taskId = listItem.getAttribute('data-id');
+        const taskText = taskSpan.textContent;
+        const isCompleted = listItem.classList.contains('completed');
+        updateTaskOnServer(taskId, taskText, isCompleted, option.color);
         menu.remove();
       });
       menu.appendChild(priorityBtn);
@@ -146,8 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
     editBtn.textContent = 'Edit Task';
     editBtn.addEventListener('click', () => {
       const newText = prompt('Edit task:', taskSpan.textContent);
-      if (newText !== null) {
+      if (newText !== null && newText.trim() !== '') {
         taskSpan.textContent = newText.trim();
+        const taskId = listItem.getAttribute('data-id');
+        const isCompleted = listItem.classList.contains('completed');
+        const priority = priorityIndicator.style.backgroundColor;
+        updateTaskOnServer(taskId, newText.trim(), isCompleted, priority);
       }
       menu.remove();
     });
@@ -157,11 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete Task';
     deleteBtn.addEventListener('click', () => {
-      if (listItem.classList.contains('completed')) {
-        completedCount--;
-        updateCompletedCount();
+      if (confirm('Are you sure you want to delete this task?')) {
+        const taskId = listItem.getAttribute('data-id');
+        if (listItem.classList.contains('completed')) {
+          completedCount--;
+          updateCompletedCount();
+        }
+        listItem.remove();
+        deleteTaskFromServer(taskId);
       }
-      listItem.remove();
       menu.remove();
     });
     menu.appendChild(deleteBtn);
@@ -184,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  // Add drag and drop functionality
+  // Function to add drag and drop functionality
   function addDragAndDrop(listItem) {
     listItem.addEventListener('dragstart', () => {
       listItem.classList.add('dragging');
@@ -197,16 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
     todoList.addEventListener('dragover', (e) => {
       e.preventDefault();
       const draggingItem = document.querySelector('.dragging');
+      if (!draggingItem) return;
       const afterElement = getDragAfterElement(todoList, e.clientY);
       if (afterElement == null) {
         todoList.appendChild(draggingItem);
       } else {
         todoList.insertBefore(draggingItem, afterElement);
       }
+      // Optionally, update the order in the database if needed
     });
   }
 
-  // Helper function to get the element after which to insert the dragged item
+  // Helper function to determine where to place the dragged item
   function getDragAfterElement(container, y) {
     const draggableElements = [
       ...container.querySelectorAll('.todo-item:not(.dragging):not(.completed)'),
@@ -226,7 +293,38 @@ document.addEventListener('DOMContentLoaded', () => {
     ).element;
   }
 
-  
+  // Function to clear all completed tasks
+  clearCompletedBtn.addEventListener('click', () => {
+    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
+    completedTasks.forEach((task) => {
+      const taskId = task.getAttribute('data-id');
+      task.remove();
+      deleteTaskFromServer(taskId);
+    });
+    completedCount = 0;
+    updateCompletedCount();
+  });
 
+  // Function to insert task at the correct position
+  function insertTaskAtCorrectPosition(listItem) {
+    const completedTasks = todoList.querySelectorAll('.todo-item.completed');
+    if (completedTasks.length > 0) {
+      // Insert before the first completed task
+      todoList.insertBefore(listItem, completedTasks[0]);
+    } else {
+      // No completed tasks, append at the end
+      todoList.appendChild(listItem);
+    }
+  }
+
+  // Function to insert completed task at the bottom
+  function insertCompletedTaskAtCorrectPosition(listItem) {
+    todoList.appendChild(listItem);
+  }
+
+  // Function to update the completed tasks count
+  function updateCompletedCount() {
+    completedCountElem.textContent = completedCount;
+  }
 
 });
