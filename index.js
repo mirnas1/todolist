@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to add a todo to the server
   function addTodoToServer(todoText, priority) {
+    // Determine the next order value locally (assuming UI adds at the end)
+    const nextOrder = todoList.children.length;
+
     fetch('todos.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -68,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     listItem.className = 'todo-item';
     listItem.setAttribute('data-id', todo.id);
+    listItem.setAttribute('data-order', todo.order); // Store order in data attribute
     moveIcon.className = 'move-icon';
     todoSpan.className = 'todo-text';
     optionsBtn.className = 'options-button';
@@ -135,15 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update todo status on the server
     const todoText = listItem.querySelector('.todo-text').textContent;
     const priority = listItem.querySelector('.priority-indicator').style.backgroundColor;
-    updateTodoOnServer(todoId, todoText, isCompleted, priority);
+    const order = parseInt(listItem.getAttribute('data-order')) || 0;
+    updateTodoOnServer(todoId, todoText, isCompleted, priority, order);
   }
 
   // Function to update todo on the server
-  function updateTodoOnServer(todoId, todoText, isCompleted, priority) {
+  function updateTodoOnServer(todoId, todoText, isCompleted, priority, order) {
     fetch('todos.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=update&task_id=${encodeURIComponent(todoId)}&todo=${encodeURIComponent(todoText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`,
+      body: `action=update&task_id=${encodeURIComponent(todoId)}&todo=${encodeURIComponent(todoText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}&order=${encodeURIComponent(order)}`,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -196,7 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const todoId = listItem.getAttribute('data-id');
         const todoText = todoSpan.textContent;
         const isCompleted = listItem.classList.contains('completed');
-        updateTodoOnServer(todoId, todoText, isCompleted, option.color);
+        const order = parseInt(listItem.getAttribute('data-order')) || 0;
+        updateTodoOnServer(todoId, todoText, isCompleted, option.color, order);
         menu.remove();
       });
       menu.appendChild(priorityBtn);
@@ -212,7 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const todoId = listItem.getAttribute('data-id');
         const isCompleted = listItem.classList.contains('completed');
         const priority = priorityIndicator.style.backgroundColor;
-        updateTodoOnServer(todoId, newText.trim(), isCompleted, priority);
+        const order = parseInt(listItem.getAttribute('data-order')) || 0;
+        updateTodoOnServer(todoId, newText.trim(), isCompleted, priority, order);
       }
       menu.remove();
     });
@@ -261,6 +268,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     listItem.addEventListener('dragend', () => {
       listItem.classList.remove('dragging');
+      // After dragging ends, update the order
+      updateAllTodoOrders();
     });
 
     todoList.addEventListener('dragover', (e) => {
@@ -273,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         todoList.insertBefore(draggingItem, afterElement);
       }
-      // Optionally, update the order in the database if needed
     });
   }
 
@@ -297,6 +305,21 @@ document.addEventListener('DOMContentLoaded', () => {
     ).element;
   }
 
+  // Function to update all todo orders after drag-and-drop
+  function updateAllTodoOrders() {
+    const todos = Array.from(todoList.querySelectorAll('.todo-item'));
+    todos.forEach((todo, index) => {
+      todo.setAttribute('data-order', index);
+      // Update the UI or styles if necessary
+      // Optionally, you can batch send all orders to the server here
+      const todoId = todo.getAttribute('data-id');
+      const todoText = todo.querySelector('.todo-text').textContent;
+      const priority = todo.querySelector('.priority-indicator').style.backgroundColor;
+      const isCompleted = todo.classList.contains('completed');
+      updateTodoOnServer(todoId, todoText, isCompleted, priority, index);
+    });
+  }
+
   // Function to clear all completed todos
   clearCompletedBtn.addEventListener('click', () => {
     const completedTodos = todoList.querySelectorAll('.todo-item.completed');
@@ -309,14 +332,25 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCompletedCount();
   });
 
-  // Function to insert todo at the correct position
+  // Function to insert todo at the correct position based on `order`
   function insertTodoAtCorrectPosition(listItem) {
-    const completedTodos = todoList.querySelectorAll('.todo-item.completed');
-    if (completedTodos.length > 0) {
-      // Insert before the first completed todo
-      todoList.insertBefore(listItem, completedTodos[0]);
-    } else {
-      // No completed todos, append at the end
+    const todos = Array.from(todoList.querySelectorAll('.todo-item:not(.completed)'));
+    const currentOrder = parseInt(listItem.getAttribute('data-order')) || 0;
+
+    // Find the position to insert based on `order`
+    let inserted = false;
+    for (let i = 0; i < todos.length; i++) {
+      const todo = todos[i];
+      const todoOrder = parseInt(todo.getAttribute('data-order')) || 0;
+      if (currentOrder < todoOrder) {
+        todoList.insertBefore(listItem, todo);
+        inserted = true;
+        break;
+      }
+    }
+
+    if (!inserted) {
+      // If not inserted yet, append at the end
       todoList.appendChild(listItem);
     }
   }

@@ -40,7 +40,7 @@ switch ($action) {
 
 // Function to retrieve todos
 function getTodos($mysqli, $user_id) {
-    $stmt = $mysqli->prepare("SELECT id, todo, is_completed, priority FROM todos WHERE user_id = ?");
+    $stmt = $mysqli->prepare("SELECT id, todo, is_completed, priority, `order` FROM todos WHERE user_id = ? ORDER BY `order` ASC");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -54,25 +54,37 @@ function getTodos($mysqli, $user_id) {
     echo json_encode(['status' => 'success', 'todos' => $todos]);
 }
 
+
 // Function to add a new todo
 function addTodo($mysqli, $user_id) {
     $todo_text = isset($_POST['todo']) ? trim($_POST['todo']) : '';
     $priority = isset($_POST['priority']) ? $_POST['priority'] : 'white';
+    $order = isset($_POST['order']) ? intval($_POST['order']) : 0;
 
     if ($todo_text === '') {
         echo json_encode(['status' => 'error', 'message' => 'Todo text cannot be empty']);
         return;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO todos (user_id, todo, priority) VALUES (?, ?, ?)");
-    $stmt->bind_param("iss", $user_id, $todo_text, $priority);
+    // Determine the next order value
+    $stmt_order = $mysqli->prepare("SELECT MAX(`order`) AS max_order FROM todos WHERE user_id = ?");
+    $stmt_order->bind_param("i", $user_id);
+    $stmt_order->execute();
+    $result_order = $stmt_order->get_result();
+    $row_order = $result_order->fetch_assoc();
+    $next_order = ($row_order['max_order'] !== null) ? $row_order['max_order'] + 1 : 1;
+    $stmt_order->close();
+
+    $stmt = $mysqli->prepare("INSERT INTO todos (user_id, todo, priority, `order`) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("issi", $user_id, $todo_text, $priority, $next_order);
     if ($stmt->execute()) {
         $todo_id = $stmt->insert_id;
         echo json_encode(['status' => 'success', 'todo' => [
             'id' => $todo_id,
             'todo' => $todo_text,
             'is_completed' => false,
-            'priority' => $priority
+            'priority' => $priority,
+            'order' => $next_order
         ]]);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to add todo']);
@@ -80,20 +92,22 @@ function addTodo($mysqli, $user_id) {
     $stmt->close();
 }
 
+
 // Function to update an existing todo
 function updateTodo($mysqli, $user_id) {
     $todo_id = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
     $todo_text = isset($_POST['todo']) ? trim($_POST['todo']) : '';
     $is_completed = isset($_POST['is_completed']) ? ($_POST['is_completed'] === 'true' || $_POST['is_completed'] === '1' ? 1 : 0) : 0;
     $priority = isset($_POST['priority']) ? $_POST['priority'] : 'white';
+    $order = isset($_POST['order']) ? intval($_POST['order']) : 0;
 
     if ($todo_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid todo ID']);
         return;
     }
 
-    $stmt = $mysqli->prepare("UPDATE todos SET todo = ?, is_completed = ?, priority = ? WHERE id = ? AND user_id = ?");
-    $stmt->bind_param("sissi", $todo_text, $is_completed, $priority, $todo_id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE todos SET todo = ?, is_completed = ?, priority = ?, `order` = ? WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("sisiii", $todo_text, $is_completed, $priority, $order, $todo_id, $user_id);
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success']);
     } else {
