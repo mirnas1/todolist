@@ -1,3 +1,5 @@
+// index.js
+
 document.addEventListener('DOMContentLoaded', () => {
   const taskInput = document.getElementById('task-input');
   const todoList = document.getElementById('todo-list');
@@ -18,13 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to load tasks from the server
   function loadTasks() {
-    fetch('tasks.php', {
-        method: 'GET'
+    fetch('tasks.php?action=get', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         if (data.status === 'success') {
-          data.tasks.forEach(task => {
+          data.tasks.forEach((task) => {
             addTaskToUI(task);
             if (task.is_completed) {
               completedCount++;
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error('Error fetching tasks:', data.message);
         }
       })
-      .catch(error => console.error('Error fetching tasks:', error));
+      .catch((error) => console.error('Error fetching tasks:', error));
   }
 
   // Function to add a task to the server
@@ -43,17 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('tasks.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `task_text=${encodeURIComponent(taskText)}&priority=${encodeURIComponent(priority)}`
+      body: `action=add&task_text=${encodeURIComponent(taskText)}&priority=${encodeURIComponent(priority)}`,
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success') {
-        addTaskToUI(data.task);
-      } else {
-        alert('Error adding task: ' + data.message);
-      }
-    })
-    .catch(error => console.error('Error adding task:', error));
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          addTaskToUI(data.task);
+        } else {
+          alert('Error adding task: ' + data.message);
+        }
+      })
+      .catch((error) => console.error('Error adding task:', error));
   }
 
   // Function to add a task to the UI
@@ -71,9 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
     optionsBtn.className = 'options-button';
     priorityIndicator.className = 'priority-indicator';
 
-    moveIcon.innerHTML = '&#9776;'; 
+    moveIcon.innerHTML = '&#9776;';
     taskSpan.textContent = task.task_text;
-    optionsBtn.textContent = '\u22EE'; 
+    optionsBtn.textContent = '\u22EE';
 
     priorityIndicator.style.backgroundColor = task.priority;
 
@@ -136,38 +139,38 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTaskOnServer(taskId, taskText, isCompleted, priority);
   }
 
-  // Function to update task on the server using PUT method
+  // Function to update task on the server
   function updateTaskOnServer(taskId, taskText, isCompleted, priority) {
     fetch('tasks.php', {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`
+      body: `action=update&task_id=${encodeURIComponent(taskId)}&task_text=${encodeURIComponent(taskText)}&is_completed=${isCompleted}&priority=${encodeURIComponent(priority)}`,
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status !== 'success') {
-        alert('Error updating task: ' + data.message);
-      }
-    })
-    .catch(error => console.error('Error updating task:', error));
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status !== 'success') {
+          alert('Error updating task: ' + data.message);
+        }
+      })
+      .catch((error) => console.error('Error updating task:', error));
   }
 
-  // Function to delete a task from the server using DELETE method
+  // Function to delete a task from the server
   function deleteTaskFromServer(taskId) {
     fetch('tasks.php', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `task_id=${encodeURIComponent(taskId)}`
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=delete&task_id=${encodeURIComponent(taskId)}`,
     })
-    .then(response => response.json())
-    .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         if (data.status === 'success') {
-            // Task successfully deleted from server
+          // Task successfully deleted from server
         } else {
-            alert('Error deleting task: ' + data.message);
+          alert('Error deleting task: ' + data.message);
         }
-    })
-    .catch(error => console.error('Error deleting task:', error));
+      })
+      .catch((error) => console.error('Error deleting task:', error));
   }
 
   // Function to show the options menu for a task
@@ -328,5 +331,4 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateCompletedCount() {
     completedCountElem.textContent = completedCount;
   }
-
 });
